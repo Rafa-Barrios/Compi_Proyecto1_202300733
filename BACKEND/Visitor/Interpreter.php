@@ -141,6 +141,11 @@ class Interpreter extends GolampiBaseVisitor
         $ids = $ctx->idList()->ID();
         $values = $this->visit($ctx->exprList());
 
+        // 🔹 Si hay una sola expresión pero devuelve múltiples valores
+        if (count($values) === 1 && is_array($values[0])) {
+            $values = $values[0];
+        }
+
         $hasNew = false;
 
         foreach ($ids as $i => $id) {
@@ -149,15 +154,13 @@ class Interpreter extends GolampiBaseVisitor
             $value = $values[$i] ?? null;
 
             try {
-                // intenta obtener variable
+
                 $this->environment->get($name);
 
-                // ya existe → asignar
                 $this->environment->assign($name, $value);
 
             } catch (\Exception $e) {
 
-                // no existe → crear
                 $this->environment->define($name, $value);
                 $hasNew = true;
             }
@@ -585,16 +588,23 @@ class Interpreter extends GolampiBaseVisitor
     */
     public function visitReturnStmt($ctx)
     {
-        $value = null;
+        $values = [];
 
         if ($ctx->exprList()) {
 
-            $values = $this->visit($ctx->exprList());
+            foreach ($ctx->exprList()->expression() as $expr) {
+                $values[] = $this->visit($expr);
+            }
 
-            $value = $values[0] ?? null;
         }
 
-        throw new ReturnSignal($value);
+        // si solo hay un valor, regresar valor simple
+        if (count($values) === 1) {
+            throw new ReturnSignal($values[0]);
+        }
+
+        // si hay múltiples valores
+        throw new ReturnSignal($values);
     }
 
     /*
