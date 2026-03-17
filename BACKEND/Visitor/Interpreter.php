@@ -157,7 +157,7 @@ class Interpreter extends GolampiBaseVisitor
         $ids = $ctx->idList()->ID();
         $values = $this->visit($ctx->exprList());
 
-        if (count($values) === 1 && is_array($values[0])) {
+        if (count($ids) !== count($values) && count($values) === 1 && is_array($values[0])) {
             $values = $values[0];
         }
 
