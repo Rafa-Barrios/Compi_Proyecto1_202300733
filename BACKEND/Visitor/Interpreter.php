@@ -126,6 +126,8 @@ class Interpreter extends GolampiBaseVisitor
 
                 if (isset($values[$i])) {
                     $value = $values[$i];
+                } else {
+                    $value = $this->defaultValue($ctx->type());
                 }
             }
 
@@ -971,7 +973,10 @@ class Interpreter extends GolampiBaseVisitor
 
         // STRING
         if ($text[0] === '"' && $text[strlen($text)-1] === '"') {
-            return substr($text, 1, -1);
+            $str = substr($text, 1, -1);
+            $str = str_replace(['\\n','\\t','\\r','\\\\','\\\"'],
+                            ["\n", "\t", "\r", "\\",  "\""], $str);
+            return $str;
         }
 
         // RUNE
@@ -1377,7 +1382,7 @@ class Interpreter extends GolampiBaseVisitor
             foreach ($values as &$v) {
 
                 if ($v === null) {
-                    $v = "nil";
+                    $v = "<nil>";
                 }
                 elseif (is_bool($v)) {
                     $v = $v ? "true" : "false";
@@ -1395,7 +1400,11 @@ class Interpreter extends GolampiBaseVisitor
 
                 }
                 else {
-                    $v = (string)$v;
+                    if ($this->isRune($v)) {
+                        $v = (string)ord($v);
+                    } else {
+                        $v = (string)$v;
+                    }
                 }
             }
 
@@ -1940,5 +1949,20 @@ class Interpreter extends GolampiBaseVisitor
         if (is_array($value)) return json_encode($value);
         if ($value instanceof \Visitor\UserFunction) return "—";
         return (string)$value;
+    }
+
+    private function defaultValue($typeCtx) {
+        if ($typeCtx === null) return null;
+        $primitive = $typeCtx->primitiveType();
+        if ($primitive === null) return null;
+        $t = $primitive->getText();
+        switch ($t) {
+            case 'int32':   return 0;
+            case 'float32': return 0.0;
+            case 'bool':    return false;
+            case 'rune':    return "\0";
+            case 'string':  return "";
+            default:        return null;
+        }
     }
 }
