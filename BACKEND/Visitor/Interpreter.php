@@ -34,15 +34,14 @@ class Interpreter extends GolampiBaseVisitor
         }
 
         // ejecutar main si existe
-        try {
-
+        $mainEnv = $this->environment->getEnvironmentOf("main");
+        if ($mainEnv === null) {
+            \ErrorTable::add("Semantico", "El programa debe contener exactamente una funcion main.", 0, 0);
+        } else {
             $main = $this->environment->get("main");
-
             if ($main instanceof Invocable) {
                 $main->invoke($this, []);
             }
-
-        } catch (\Exception $e) {
         }
 
         return $this->output;
@@ -210,11 +209,21 @@ class Interpreter extends GolampiBaseVisitor
     public function visitFunctionDecl($ctx)
     {
         $name = $ctx->ID()->getText();
+        $line = $ctx->getStart()->getLine();
+        $col  = $ctx->getStart()->getCharPositionInLine();
+
+        // main no puede recibir parámetros
+        if ($name === "main" && $ctx->parameters() !== null) {
+            \ErrorTable::add("Semantico", "La funcion main no puede recibir parametros.", $line, $col);
+        }
+
+        // main no puede retornar valores
+        if ($name === "main" && $ctx->returnType() !== null) {
+            \ErrorTable::add("Semantico", "La funcion main no puede retornar valores.", $line, $col);
+        }
 
         $function = new UserFunction($ctx, $this->environment);
-
         $this->environment->define($name, $function);
-
         return null;
     }
 
@@ -787,16 +796,18 @@ class Interpreter extends GolampiBaseVisitor
 
             if ($child instanceof \Context\CallContext) {
 
-                if (!($value instanceof Invocable)) {
-
+                // main no puede ser llamada explícitamente
+                if ($varName === "main") {
                     \ErrorTable::add(
                         "Semantico",
-                        "Intento de llamar algo que no es funcion.",
+                        "La funcion main no puede ser invocada explicitamente.",
                         $ctx->getStart()->getLine(),
                         $ctx->getStart()->getCharPositionInLine()
                     );
-
                     return null;
+                }
+
+                if (!($value instanceof Invocable)) {
                 }
 
                 $args = [];
@@ -1595,7 +1606,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if (is_string($a) && is_string($b)) {
             return $a . $b;
@@ -1622,7 +1636,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1645,7 +1662,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if (is_string($a) && is_int($b)) {
             return str_repeat($a, $b);
@@ -1676,7 +1696,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1711,7 +1734,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1760,7 +1786,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1782,7 +1811,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1804,7 +1836,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
@@ -1826,7 +1861,10 @@ class Interpreter extends GolampiBaseVisitor
     {
         if ($a === null || $b === null) return null;
 
-        if (is_bool($a) || is_bool($b)) return null;
+        if (is_bool($a) || is_bool($b)) {
+            \ErrorTable::add("Semantico", "Tipos incompatibles en operacion +.", $line, $column);
+            return null;
+        }
 
         if ($this->isRune($a)) $a = ord($a);
         if ($this->isRune($b)) $b = ord($b);
