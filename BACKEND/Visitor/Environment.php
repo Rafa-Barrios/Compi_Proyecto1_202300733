@@ -28,10 +28,21 @@ class Environment {
     }
 
     public function get($name, $line=0, $column=0) {
-        if (array_key_exists($name, $this->values))   return $this->values[$name];
+        if (array_key_exists($name, $this->values)) {
+            $val = $this->values[$name];
+            if ($val instanceof \Visitor\Pointer) return $val->get();
+            return $val;
+        }
         if (array_key_exists($name, $this->constants)) return $this->constants[$name];
         if ($this->parent !== null) return $this->parent->get($name, $line, $column);
         \ErrorTable::add("Semantico", "Identificador '$name' no definido.", $line, $column);
+        return null;
+    }
+
+    public function getRaw($name) {
+        if (array_key_exists($name, $this->values))    return $this->values[$name];
+        if (array_key_exists($name, $this->constants)) return $this->constants[$name];
+        if ($this->parent !== null) return $this->parent->getRaw($name);
         return null;
     }
 
@@ -41,6 +52,10 @@ class Environment {
             return;
         }
         if (array_key_exists($name, $this->values)) {
+            if ($this->values[$name] instanceof \Visitor\Pointer) {
+                $this->values[$name]->set($value);
+                return;
+            }
             $this->values[$name] = $value;
             return;
         }

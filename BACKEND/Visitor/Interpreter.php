@@ -283,8 +283,14 @@ class Interpreter extends GolampiBaseVisitor
         if ($leftExpr->getChildCount() == 2 && $leftExpr->getChild(0)->getText() == '*') {
 
             // obtener el objeto Pointer
-            $pointer = $this->visit($leftExpr->getChild(1));
-
+            $child1Text = $leftExpr->getChild(1)->getText();
+            $pointer = null;
+            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $child1Text)) {
+                $pointer = $this->environment->getRaw($child1Text);
+            }
+            if (!($pointer instanceof \Visitor\Pointer)) {
+                $pointer = $this->visit($leftExpr->getChild(1));
+            }
             if (!($pointer instanceof \Visitor\Pointer)) {
 
                 \ErrorTable::add(
@@ -338,11 +344,18 @@ class Interpreter extends GolampiBaseVisitor
 
             $name = $nameMatch[1];
 
-            preg_match_all('/\[(\d+)\]/', $leftText, $indexMatches);
+            preg_match_all('/\[([^\]]+)\]/', $leftText, $indexMatches);
 
             if (!empty($indexMatches[1])) {
-
-                $indices = array_map('intval', $indexMatches[1]);
+                $indices = [];
+                foreach ($indexMatches[1] as $idxExpr) {
+                    if (is_numeric($idxExpr)) {
+                        $indices[] = intval($idxExpr);
+                    } else {
+                        $idxVal = $this->environment->get(trim($idxExpr));
+                        $indices[] = intval($idxVal);
+                    }
+                }
 
                 $array = $this->environment->get($name);
 
@@ -1178,20 +1191,23 @@ class Interpreter extends GolampiBaseVisitor
                 // OPERADOR *
                 // =========================
                 case '*':
-
-                    $value = $this->visit($ctx->unary());
-
+                    $varName2 = $ctx->unary()->getText();
+                    $value = null;
+                    if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $varName2)) {
+                        $value = $this->environment->getRaw($varName2);
+                    }
+                    if (!($value instanceof \Visitor\Pointer)) {
+                        $value = $this->visit($ctx->unary());
+                    }
                     if ($value instanceof \Visitor\Pointer) {
                         return $value->get();
                     }
-
                     \ErrorTable::add(
                         "Semantico",
                         "No es un puntero valido.",
                         $ctx->getStart()->getLine(),
                         $ctx->getStart()->getCharPositionInLine()
                     );
-
                     return null;
             }
         }
@@ -1420,6 +1436,11 @@ class Interpreter extends GolampiBaseVisitor
 
             $exprs = $ctx->expression();
             $value = $this->visit($exprs[0]);
+
+            // desreferenciar puntero si aplica
+            if ($value instanceof \Visitor\Pointer) {
+                $value = $value->get();
+            }
 
             // strings
             if (is_string($value)) {

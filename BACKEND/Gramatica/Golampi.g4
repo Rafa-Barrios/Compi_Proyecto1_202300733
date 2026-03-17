@@ -32,7 +32,7 @@ parameters
     ;
 
 parameter
-    : pointer? ID type
+    : ID pointer? type
     ;
 
 pointer
