@@ -1,7 +1,8 @@
 # Documentación Técnica — Golampi Interpreter
 
 > **Curso:** Organización de Lenguajes y Compiladores 2  
-> **Universidad:** San Carlos de Guatemala — Facultad de Ingeniería  
+> **Universidad:** San Carlos de Guatemala — Facultad de Ingeniería 
+> **Estudiante:** Angel Rafael Barrios González-20230733
 > **Tecnologías:** PHP · ANTLRv4 · HTML/CSS/JavaScript
 
 ---
