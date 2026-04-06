@@ -7,22 +7,22 @@ namespace Composer\Autoload;
 class ComposerStaticInit1e8779a1b732f6181b7084135c6b23d9
 {
     public static $prefixLengthsPsr4 = array (
-        'P' => 
+        'P' =>
         array (
             'Psr\\Log\\' => 8,
         ),
-        'A' => 
+        'A' =>
         array (
             'Antlr\\Antlr4\\Runtime\\' => 21,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Psr\\Log\\' => 
+        'Psr\\Log\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
         ),
-        'Antlr\\Antlr4\\Runtime\\' => 
+        'Antlr\\Antlr4\\Runtime\\' =>
         array (
             0 => __DIR__ . '/..' . '/antlr/antlr4-php-runtime/src',
         ),

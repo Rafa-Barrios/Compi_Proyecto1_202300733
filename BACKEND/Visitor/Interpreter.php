@@ -280,26 +280,17 @@ class Interpreter extends GolampiBaseVisitor
         =========================
         */
 
-        if ($leftExpr->getChildCount() == 2 && $leftExpr->getChild(0)->getText() == '*') {
+        if (preg_match('/^\*([a-zA-Z_][a-zA-Z0-9_]*)$/', $leftText, $ptrMatch)) {
+            $ptrName = $ptrMatch[1];
+            $pointer = $this->environment->getRaw($ptrName);
 
-            // obtener el objeto Pointer
-            $child1Text = $leftExpr->getChild(1)->getText();
-            $pointer = null;
-            if (preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $child1Text)) {
-                $pointer = $this->environment->getRaw($child1Text);
-            }
             if (!($pointer instanceof \Visitor\Pointer)) {
-                $pointer = $this->visit($leftExpr->getChild(1));
-            }
-            if (!($pointer instanceof \Visitor\Pointer)) {
-
                 \ErrorTable::add(
                     "Semantico",
                     "Asignacion a puntero invalida.",
                     $ctx->getStart()->getLine(),
                     $ctx->getStart()->getCharPositionInLine()
                 );
-
                 return null;
             }
 
@@ -307,30 +298,14 @@ class Interpreter extends GolampiBaseVisitor
             $result = null;
 
             switch ($operator) {
-
-                case '=':
-                    $result = $right;
-                    break;
-
-                case '+=':
-                    $result = $this->add($left, $right);
-                    break;
-
-                case '-=':
-                    $result = $this->sub($left, $right);
-                    break;
-
-                case '*=':
-                    $result = $this->mul($left, $right);
-                    break;
-
-                case '/=':
-                    $result = $this->div($left, $right);
-                    break;
+                case '=':  $result = $right; break;
+                case '+=': $result = $this->add($left, $right); break;
+                case '-=': $result = $this->sub($left, $right); break;
+                case '*=': $result = $this->mul($left, $right); break;
+                case '/=': $result = $this->div($left, $right); break;
             }
 
             $pointer->set($result);
-
             return $result;
         }
 
